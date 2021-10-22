@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"flag"
-	"context" // Done() struct{} || <- ctx.Done()
-	"strings"
-	"strconv"
+	"fmt"
 	"log"
+	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"net"
 )
 
 var (
-	host = flag.String("host", "127.0.0.1", "Host or ip to scan...")
-	ports = flag.String("range", "1-65535", "Range port to scan: 80,443,1-65535,1000-2000, ...")
+	host    = flag.String("host", "127.0.0.1", "Host or ip to scan...")
+	ports   = flag.String("range", "1-65535", "Range port to scan: 80,443,1-65535,1000-2000, ...")
 	threads = flag.Int("threads", 1000, "Number of threads")
 	timeout = flag.Duration("timeout", 1*time.Second, "Seconds per threads")
 )
@@ -44,7 +44,7 @@ func processRange(ctx context.Context, r string) chan int {
 			} else {
 				maxPort, err = strconv.Atoi(rg[1])
 				if err != nil {
-				    log.Print("Range cannnot be interpreter: ", block)
+					log.Print("Range cannnot be interpreter: ", block)
 					continue
 				}
 			}
@@ -97,10 +97,9 @@ func scanPorts(ctx context.Context, in <-chan int) chan string {
 }
 
 func scanPort(port int) string {
-    // IP PORT
+	// IP PORT
 	addr := fmt.Sprintf("%s:%d", *host, port)
 	conn, err := net.DialTimeout("tcp", addr, *timeout)
-
 	if err != nil {
 		return fmt.Sprintf("%d: %s", port, err.Error())
 	}
@@ -111,7 +110,7 @@ func scanPort(port int) string {
 }
 
 func main() {
-    // Define our context
+	// Define our context
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
